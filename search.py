@@ -78,10 +78,10 @@ def negamax(board, depth, alpha, beta):
 
     if tablebases and len(board.piece_map()) <= 5:
         try:
-            # probe_wdl returns 2 (win), 0 (draw), -2 (loss)
+            # get_wdl returns 2 (win), 0 (draw), -2 (loss)
             res = tablebases.get_wdl(board)
             if res is not None:
-                # Map -2..2 to high scores so engine prefers TB wins over NN scores
+                # Map -2 and 2 to high scores so engine prefers TB wins over NN scores
                 # We use 90.0 so it's slightly less than actual checkmate (100.0)
                 return res * 45.0 
         except Exception:
@@ -93,6 +93,7 @@ def negamax(board, depth, alpha, beta):
     board_hash = chess.polyglot.zobrist_hash(board)
     tt_entry = tt.probe(board_hash)
 
+    # Check if we have already seen this position
     if tt_entry and tt_entry['depth'] >= depth:
         tt_move = tt_entry.get('move')
         if tt_move is None or tt_move in board.legal_moves:
@@ -113,7 +114,6 @@ def negamax(board, depth, alpha, beta):
 
     negamax.nodes += 1
 
-    # Base case: leaf node or game over
     if board.is_game_over():
         return evaluate_board(board)
 
@@ -142,6 +142,7 @@ def negamax(board, depth, alpha, beta):
             best_move = move
 
         alpha = max(alpha, eval)
+        # Alpha-beta pruning
         if alpha >= beta:
             break
 
@@ -165,6 +166,7 @@ def select_best_move(board, time_limit_ms):
         print(f"info string Playing move from custom opening book")
         return book_move
 
+    # Check if we can use the tablebase
     if tablebases and len(board.piece_map()) <= 5:
         try:
             # DTZ (Distance to Zeroing) finds the fastest way to win/draw
@@ -207,6 +209,7 @@ def select_best_move(board, time_limit_ms):
         else:
             break
 
+        # Since each level takes longer, if we've used most of the time already, we know we won't finish the next level
         if (time.time() - START_TIME) > (TIME_LIMIT * 0.6):
             break
 
@@ -285,7 +288,6 @@ def quiescence_search(board, alpha, beta):
 def get_material_score(board):
     values = {1: 1.0, 2: 3.0, 3: 3.0, 4: 5.0, 5: 9.0, 6: 0} # Scale to NN range
     score = 0
-    # HIGHLIGHT: Ensure this is always Side-To-Move (STM)
     for sq in chess.SQUARES:
         p = board.piece_at(sq)
         if p:
@@ -305,10 +307,10 @@ def evaluate_board(board, use_nn = True):
         mat_score = get_material_score(board)
         return -1.0 if mat_score > 2.0 else 0.0
 
-    # Combine Neural Network "Intuition" with hard Material "Facts"
     mat_score = get_material_score(board)
     score = get_nn_prediction(board) if use_nn else 0.1 * mat_score
 
+    # Clean up script when few pieces remain
     if abs(mat_score) > 2.0 and len(board.piece_map()) < 10:
         # Determine who is winning
         is_white_winning = mat_score > 0
@@ -331,10 +333,7 @@ def evaluate_board(board, use_nn = True):
         # 2. Reduce distance between the two kings
         dist_between_kings = chess.square_distance(winner_k, loser_k)
         mop_up_bonus += (14 - dist_between_kings) * 0.1
-
-        # Apply bonus: positive if winning color is the side-to-move (STM)
-        # In Negamax, 'score' is already relative to STM. 
-        # If we are the winner, add it. If we are the loser, subtract it.
+        
         if board.turn == winning_color:
             score += mop_up_bonus*0.1
         else:
