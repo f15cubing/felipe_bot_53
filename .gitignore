@@ -1,0 +1,5 @@
+venv/
+__pycache__/
+*.pyc
+*.save
+lichess_bot_auto_logs/
