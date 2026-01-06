@@ -5,7 +5,6 @@ from search import select_best_move
 
 def uci_loop():
     board = chess.Board()
-    depth = 3 # Default depth
 
     while True:
         line = sys.stdin.readline()
@@ -24,8 +23,6 @@ def uci_loop():
             print("uciok", flush=True)
 
         elif command.startswith("setoption"):
-            # Lichess tries to set things like 'Move Overhead'.
-            # We just ignore these so the bot doesn't crash.
             continue
 
         elif command == "isready":
@@ -59,8 +56,6 @@ def uci_loop():
                             # Skip illegal moves to prevent the crash
                             continue 
             except Exception as e:
-                # Log the error if you have logging, or just reset to startpos 
-                # to keep the engine from dying (Exit Code 1)
                 board = chess.Board()
 
         elif command == "go":
@@ -75,17 +70,16 @@ def uci_loop():
                 my_time = wtime if board.turn == chess.WHITE else btime
                 my_inc = winc if board.turn == chess.WHITE else binc
 
-                # 3. Calculate time (Ensure it's a whole number for the search)
+                # 3. Calculate time
                 allocated_time = int((my_time / 40) + (my_inc / 2))
                 # Never use less than 100ms, never use more than what we have left minus a safety buffer
                 allocated_time = int(max(100, min(allocated_time, my_time - 500)))
 
-                # 4. Call search (This is where the crash usually happens)
+                # 4. Call search
                 best_move = select_best_move(board, allocated_time)
                 
                 # 5. Output response safely
                 if best_move:
-                    # If it's a chess.Move object, use .uci(), otherwise print as string
                     move_str = best_move.uci() if hasattr(best_move, "uci") else str(best_move)
                     print(f"bestmove {move_str}", flush=True)
                 else:
@@ -93,8 +87,6 @@ def uci_loop():
                     print(f"bestmove {list(board.legal_moves)[0].uci()}", flush=True)
 
             except Exception as e:
-                # CRITICAL: This keeps the process alive if search.py has a bug
-                # It will pick the first legal move so the game continues
                 legal_moves = list(board.legal_moves)
                 if legal_moves:
                     print(f"bestmove {legal_moves[0].uci()}", flush=True)
