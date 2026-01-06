@@ -12,6 +12,8 @@ def board_to_tensor(board):
     # Determine if we need to flip perspective
     is_white = board.turn == chess.WHITE
 
+    # The first 768 numbers are derived from (12 piece types * 64 squares).
+    # A '1' indicates the presence of that specific piece at that square.
     for square in chess.SQUARES:
         piece = board.piece_at(square)
         if piece:
@@ -35,7 +37,7 @@ def board_to_tensor(board):
 
     tensor[769] = np.clip(rel_balance / 39, -1, 1) # Material Balance
     tensor[770] = get_relative_balance(board, chess.PAWN, 8)                  # Pawn Balance
-    tensor[771] = (get_relative_balance(board, chess.KNIGHT, 2) + get_relative_balance(board, chess.BISHOP, 2)) / 2 # Minor Balance
+    tensor[771] = (get_relative_balance(board, chess.KNIGHT, 2) + get_relative_balance(board, chess.BISHOP, 2)) / 2 # Minor Piece Balance
     tensor[772] = get_relative_balance(board, chess.ROOK, 2)                  # Rook Balance
     tensor[773] = get_relative_balance(board, chess.QUEEN, 1)                 # Queen Balance
 
