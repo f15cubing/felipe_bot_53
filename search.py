@@ -264,8 +264,6 @@ def get_move_priority(board, move):
 
     return 0 # Quiet moves
 
-# In search.py
-
 def quiescence_search(board, alpha, beta):
     stand_pat = evaluate_board(board, use_nn=False)
     if stand_pat >= beta: return beta
