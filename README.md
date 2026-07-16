@@ -39,7 +39,7 @@ Instead of traditional piece-square tables, this engine uses a **Multi-Layer Per
 
 ## 🚀 Local Setup
 To run the engine locally:
-1. Clone the repo: `git clone https://github.com/f15cubing/lichess-bot-felipe-53.git`
+1. Clone the repo: `git clone https://github.com/f15cubing/felipe_bot_53.git`
 2. Install dependencies: `pip install -r requirements.txt`
 3. Run the trainer: `python train.py` (requires dataset)
 4. Play via UCI: `python uci_wrapper.py`
