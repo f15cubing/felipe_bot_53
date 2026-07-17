@@ -1,86 +1,69 @@
 # Neural Chess Engine & Lichess Bot
-[![Lichess Bot](https://img.shields.io/badge/Lichess-Play%20Against%20Me-orange)](https://lichess.org/@/felipe_bot_53)
 
-A custom-built chess engine featuring a neural network evaluation function and minimax search, deployed as a live bot on Lichess.
+A chess engine with a neural-network evaluation function and alpha-beta search,
+deployed as a live bot on Lichess: [lichess.org/@/felipe_bot_53](https://lichess.org/@/felipe_bot_53).
 
-## 🤖 Play the Bot
-The engine is hosted 24/7 on an Oracle Cloud Always Free VM and accepts challenges on Lichess:
-**[Play against the bot here](https://lichess.org/@/felipe_bot_53)**
+## How it works
 
----
+### Evaluation
 
-## 🧠 Technical Overview
+Positions are scored by a multi-layer perceptron (778 → 256 → 128 → 1) rather than
+hand-tuned piece-square tables. The 778-element input encodes piece bitboards, side
+to move, castling rights, and material-balance features (see `tensorizor.py`). The
+network was trained with Huber loss on ~200k positions (1800–2400 Elo) sampled from
+the Lichess database.
 
-### 1. Neural Network Evaluation
-Instead of traditional piece-square tables, this engine uses a **Multi-Layer Perceptron (MLP)** to evaluate positions.
-- **Architecture:** 778 → 256 → 128 → 1.
-- **Input:** 778-element feature tensors (representing bitboards for all piece types, side to move, castling rights, and en passant).
-- **Training:** Trained on **200,000+ random positions** (1800-2400 Elo range) from the Lichess database.
-- **Method:** Network trained using **Huber Loss** and **Gradient Descent** via **PyTorch**.
+### Search
 
-### 2. Search Algorithm
-- **Negamax:** Implemented with **Alpha-Beta Pruning** to drastically reduce the search tree size.
-- **Quiescence Search:** Prevents the "horizon effect" by continuing the search through tactical captures using a simplified material evaluator.
-- **Transposition Table:** Utilizes a hash map to store previously evaluated positions, significantly increasing search depth per second.
+Negamax with alpha-beta pruning, iterative deepening, and a transposition table
+(`search.py`). A quiescence search extends captures at the leaves to avoid the
+horizon effect, and check extensions deepen forcing lines.
 
-### 3. Endgame & Openings
-- **Syzygy Tablebases:** Integrated 3-5 piece tablebases for mathematically perfect play in the endgame.
-- **Opening Book:** Uses a Polyglot-style opening book to ensure varied and rapid play in the early game.
+### Endgames and openings
 
----
+- 3–5 piece Syzygy tablebases for exact endgame play (optional; set `SYZYGY_PATH`).
+- A JSON opening book (`book.json`) for the first few moves.
 
-## 🛠️ Infrastructure & Deployment
-- **Cloud:** Hosted on an **Oracle Cloud (Always Free)** Ampere ARM instance, managed as a `systemd` service (auto-restart + start-on-boot).
-- **OS:** **Ubuntu Linux**, managed entirely via **SSH**.
-- **Environment:** Production environment configured using **Linux CLI**, with code iterations handled via **Nano** and **Git**.
-- **API:** Communicates with the Lichess API using the `python-chess` library and a custom UCI wrapper.
+## Running locally
 
----
+```bash
+pip install -r requirements.txt
+python train.py         # trains model.pth from chess_data3.npz (see tensorizor.py)
+python uci_wrapper.py   # exposes the engine over UCI on stdin/stdout
+```
 
-## 🚀 Local Setup
-To run the engine locally:
-1. Clone the repo: `git clone https://github.com/f15cubing/felipe_bot_53.git`
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the trainer: `python train.py` (requires dataset)
-4. Play via UCI: `python uci_wrapper.py`
+`model.pth` is committed, so you can play without retraining.
 
-## ☁️ Deploy 24/7 for Free (Oracle Cloud Always Free)
+## Deploying the bot 24/7
 
-The bot runs fine on a CPU-only VM. Oracle Cloud's **Always Free** tier
-(never expires, unlike a trial) is a good fit.
+The engine runs CPU-only and fits on a small always-free cloud VM.
 
-1. **Create a VM.** Oracle Cloud → Compute → Create Instance → shape
-   **VM.Standard.A1.Flex** (Ampere ARM, Always Free; ~2 OCPU / 8 GB is well
-   under the free cap), image **Ubuntu 22.04/24.04**. SSH in as `ubuntu`.
-2. **Install + set up:**
+1. Provision an Ubuntu 22.04/24.04 host and SSH in.
+2. Install and set up:
    ```bash
    git clone https://github.com/f15cubing/felipe_bot_53.git
    cd felipe_bot_53
    ./setup.sh
    ```
-3. **Add your token.** Create a Lichess OAuth token with the **`bot:play`**
-   scope at <https://lichess.org/account/oauth/token/create>, then edit
-   `lichess-bot/config.yml`:
+3. Create a Lichess OAuth token with the `bot:play` scope at
+   <https://lichess.org/account/oauth/token/create>, then set it in
+   `lichess-bot/config.yml` along with the engine paths:
    ```yaml
    token: "lip_yourRealTokenHere"
    engine:
      dir: "/home/ubuntu/felipe_bot_53"
      interpreter: "/home/ubuntu/felipe_bot_53/venv/bin/python"
    ```
-4. **Test once:**
-   ```bash
-   cd lichess-bot && ../venv/bin/python lichess-bot.py -v
-   ```
-5. **Run it permanently** (auto-restart on crash, survives reboots) using the
-   included `felipe-bot.service`:
+4. Test once: `cd lichess-bot && ../venv/bin/python lichess-bot.py -v`
+5. Run it as a service (restarts on crash, survives reboots):
    ```bash
    sudo cp felipe-bot.service /etc/systemd/system/felipe-bot.service
    sudo systemctl daemon-reload
    sudo systemctl enable --now felipe-bot
-   journalctl -u felipe-bot -f   # watch live logs
+   journalctl -u felipe-bot -f
    ```
 
----
+## Credits
 
-## ⚖️ Credits & Licensing
-- **API Wrapper:** This project utilizes the [lichess-org/lichess-bot](https://github.com/lichess-org/lichess-bot) framework to interface with the Lichess API.
+Lichess API integration uses the [lichess-bot](https://github.com/lichess-org/lichess-bot)
+framework, vendored under `lichess-bot/`.
