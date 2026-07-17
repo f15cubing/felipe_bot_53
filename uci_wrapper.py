@@ -55,7 +55,7 @@ def uci_loop():
                         except (ValueError, chess.InvalidMoveError, chess.IllegalMoveError):
                             # Skip illegal moves to prevent the crash
                             continue 
-            except Exception as e:
+            except Exception:
                 board = chess.Board()
 
         elif command == "go":
@@ -86,7 +86,7 @@ def uci_loop():
                     # Fallback if search returns None
                     print(f"bestmove {list(board.legal_moves)[0].uci()}", flush=True)
 
-            except Exception as e:
+            except Exception:
                 legal_moves = list(board.legal_moves)
                 if legal_moves:
                     print(f"bestmove {legal_moves[0].uci()}", flush=True)

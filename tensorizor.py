@@ -56,22 +56,6 @@ def board_to_tensor(board):
 
     return tensor
 
-def save_dataset(positions_with_scores, filename="chess_data.npz"):
-    X = [] # Tensors
-    y = [] # Scores
-
-    for fen, score in positions_with_scores:
-        board = chess.Board(fen)
-        X.append(board_to_tensor(board))
-        y.append(score)
-
-        mirrored = board.mirror()
-        X.append(board_to_tensor(mirrored))
-        y.append(-score)
-    # Save as compressed numpy file
-    np.savez_compressed(filename, x=np.array(X), y=np.array(y))
-    print(f"Saved {len(X)} positions to {filename}")
-
 def process_checkpoint(input_file="raw_checkpoint.npz", output_file="chess_data3.npz"):
     loader = np.load(input_file)
     fens = loader['fens']
