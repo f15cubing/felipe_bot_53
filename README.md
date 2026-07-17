@@ -4,7 +4,7 @@
 A custom-built chess engine featuring a neural network evaluation function and minimax search, deployed as a live bot on Lichess.
 
 ## 🤖 Play the Bot
-The engine is currently hosted on a Google Cloud VM and accepts challenges on Lichess:
+The engine is hosted 24/7 on an Oracle Cloud Always Free VM and accepts challenges on Lichess:
 **[Play against the bot here](https://lichess.org/@/felipe_bot_53)**
 
 ---
@@ -30,7 +30,7 @@ Instead of traditional piece-square tables, this engine uses a **Multi-Layer Per
 ---
 
 ## 🛠️ Infrastructure & Deployment
-- **Cloud:** Hosted on a **Google Cloud Platform (GCP)** Compute Engine instance.
+- **Cloud:** Hosted on an **Oracle Cloud (Always Free)** Ampere ARM instance, managed as a `systemd` service (auto-restart + start-on-boot).
 - **OS:** **Ubuntu Linux**, managed entirely via **SSH**.
 - **Environment:** Production environment configured using **Linux CLI**, with code iterations handled via **Nano** and **Git**.
 - **API:** Communicates with the Lichess API using the `python-chess` library and a custom UCI wrapper.
