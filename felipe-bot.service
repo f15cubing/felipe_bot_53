@@ -1,0 +1,27 @@
+# systemd unit to run the Lichess bot 24/7.
+#
+# It restarts on crash and starts automatically after a reboot, so the bot
+# stays online without a login session or a terminal open.
+#
+# Install (adjust User= and the paths if you did not clone to
+# /home/ubuntu/felipe_bot_53):
+#   sudo cp felipe-bot.service /etc/systemd/system/felipe-bot.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now felipe-bot
+#   systemctl status felipe-bot        # confirm it is running
+#   journalctl -u felipe-bot -f        # watch live logs
+
+[Unit]
+Description=Lichess Bot felipe_bot_53
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/felipe_bot_53/lichess-bot
+ExecStart=/home/ubuntu/felipe_bot_53/venv/bin/python /home/ubuntu/felipe_bot_53/lichess-bot/lichess-bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
