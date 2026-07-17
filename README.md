@@ -39,10 +39,48 @@ Instead of traditional piece-square tables, this engine uses a **Multi-Layer Per
 
 ## 🚀 Local Setup
 To run the engine locally:
-1. Clone the repo: `git clone https://github.com/f15cubing/lichess-bot-felipe-53.git`
+1. Clone the repo: `git clone https://github.com/f15cubing/felipe_bot_53.git`
 2. Install dependencies: `pip install -r requirements.txt`
 3. Run the trainer: `python train.py` (requires dataset)
 4. Play via UCI: `python uci_wrapper.py`
+
+## ☁️ Deploy 24/7 for Free (Oracle Cloud Always Free)
+
+The bot runs fine on a CPU-only VM. Oracle Cloud's **Always Free** tier
+(never expires, unlike a trial) is a good fit.
+
+1. **Create a VM.** Oracle Cloud → Compute → Create Instance → shape
+   **VM.Standard.A1.Flex** (Ampere ARM, Always Free; ~2 OCPU / 8 GB is well
+   under the free cap), image **Ubuntu 22.04/24.04**. SSH in as `ubuntu`.
+2. **Install + set up:**
+   ```bash
+   git clone https://github.com/f15cubing/felipe_bot_53.git
+   cd felipe_bot_53
+   ./setup.sh
+   ```
+3. **Add your token.** Create a Lichess OAuth token with the **`bot:play`**
+   scope at <https://lichess.org/account/oauth/token/create>, then edit
+   `lichess-bot/config.yml`:
+   ```yaml
+   token: "lip_yourRealTokenHere"
+   engine:
+     dir: "/home/ubuntu/felipe_bot_53"
+     interpreter: "/home/ubuntu/felipe_bot_53/venv/bin/python"
+   ```
+4. **Test once:**
+   ```bash
+   cd lichess-bot && ../venv/bin/python lichess-bot.py -v
+   ```
+5. **Run it permanently** (auto-restart on crash, survives reboots) using the
+   included `felipe-bot.service`:
+   ```bash
+   sudo cp felipe-bot.service /etc/systemd/system/felipe-bot.service
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now felipe-bot
+   journalctl -u felipe-bot -f   # watch live logs
+   ```
+
+---
 
 ## ⚖️ Credits & Licensing
 - **API Wrapper:** This project utilizes the [lichess-org/lichess-bot](https://github.com/lichess-org/lichess-bot) framework to interface with the Lichess API.
