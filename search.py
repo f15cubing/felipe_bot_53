@@ -37,7 +37,7 @@ class TranspositionTable:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "model.pth")
 
-SYZYGY_PATH = "/home/f15cubing/syzygy"
+SYZYGY_PATH = os.environ.get("SYZYGY_PATH", os.path.join(BASE_DIR, "syzygy"))
 tablebases = None
 
 if os.path.exists(SYZYGY_PATH):
